@@ -49,6 +49,7 @@ app.MapGet("/api/facturas", async ([FromServices] ProyectContext dbContext) =>
 app.MapPost("/api/facturas", async ([FromServices] ProyectContext dbContext, [FromBody] Factura factura) =>
 {
     factura.Id = Guid.NewGuid();
+    factura.Fecha = DateTime.Now;
     await dbContext.Facturas.AddAsync(factura);
     await dbContext.SaveChangesAsync();
     return Results.Ok(factura);
@@ -83,6 +84,7 @@ app.MapGet("/api/tasacambio", async ([FromServices] ProyectContext dbContext) =>
 app.MapPost("/api/tasacambio", async ([FromServices] ProyectContext dbContext, [FromBody] TasaDeCambio tasaCambio) =>
 {
     tasaCambio.Id = Guid.NewGuid();
+    tasaCambio.Fecha = DateTime.Now;
     await dbContext.TasasDeCambio.AddAsync(tasaCambio);
     await dbContext.SaveChangesAsync();
     return Results.Ok(tasaCambio);

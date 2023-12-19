@@ -12,9 +12,9 @@ namespace gbmtest.Models
         // [Key]
         public Guid Id { get; set; }
         [ForeignKey("FacturaId")]
-        public int FacturaId { get; set; }
+        public Guid FacturaId { get; set; }
         [ForeignKey("ProductoId")]
-        public int ProductoId { get; set; }
+        public Guid ProductoId { get; set; }
         [Required]
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }

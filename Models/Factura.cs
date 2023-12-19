@@ -13,7 +13,7 @@ namespace gbmtest.Models
         // [Key]
         public Guid Id { get; set; }
         // [ForeignKey("ClienteId")]
-        public int ClienteId { get; set; }
+        public Guid ClienteId { get; set; }
         // [Required]
         public DateTime Fecha { get; set; }
 
