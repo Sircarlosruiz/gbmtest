@@ -8,8 +8,8 @@ namespace gbmtest.Models
 {
     public class TasaDeCambio
     {
-        [Key]
-        public int Id { get; set; }
+        // [Key]
+        public Guid Id { get; set; }
         public DateTime Fecha { get; set; }
         public decimal Valor { get; set; }
     }

@@ -9,8 +9,8 @@ namespace gbmtest.Models
 {
     public class DetalleFactura
     {
-        [Key]
-        public int Id { get; set; }
+        // [Key]
+        public Guid Id { get; set; }
         [ForeignKey("FacturaId")]
         public int FacturaId { get; set; }
         [ForeignKey("ProductoId")]
