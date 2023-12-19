@@ -25,6 +25,9 @@ namespace gbmtest.Models
         [JsonIgnore]
         public Cliente? Cliente { get; set; }
 
+        [NotMapped]
+        public decimal Iva { get; set; }
+
         [JsonIgnore]
         public ICollection<DetalleFactura> DetallesFactura{ get; set; }
     }

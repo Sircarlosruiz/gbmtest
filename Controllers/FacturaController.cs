@@ -31,6 +31,8 @@ namespace gbmtest.Controllers
         {
             factura.Id = Guid.NewGuid();
             factura.Fecha = DateTime.Now;
+            const decimal tasaIva = 0.15m;
+            factura.Iva = tasaIva;
             await _dbContext.Facturas.AddAsync(factura);
             await _dbContext.SaveChangesAsync();
             return Ok(factura);
