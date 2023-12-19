@@ -25,10 +25,18 @@ namespace gbmtest.Models
         [JsonIgnore]
         public Cliente? Cliente { get; set; }
 
-        [NotMapped]
+        // [NotMapped]
         public decimal Iva { get; set; }
 
         [JsonIgnore]
         public ICollection<DetalleFactura> DetallesFactura{ get; set; }
+    }
+
+    public class FacturaDto
+    {
+        public Guid Id { get; set; }
+        public Guid ClienteId { get; set; }
+        public DateTime Fecha { get; set; }
+        public decimal Iva { get; set; }
     }
 }

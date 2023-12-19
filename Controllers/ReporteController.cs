@@ -8,58 +8,75 @@ using Microsoft.EntityFrameworkCore;
 
 namespace gbmtest.Controllers
 {
-[ApiController]
-[Route("api/[controller]")]
-public class ReporteController : ControllerBase
-{
-    private readonly ProyectContext _dbContext;
-
-    public ReporteController(ProyectContext dbContext)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ReporteController : ControllerBase
     {
-        _dbContext = dbContext;
-    }
+        private readonly ProyectContext _dbContext;
 
-    [HttpGet("ventas-mensuales")]
-    public async Task<ActionResult<IEnumerable<ReporteVentaMensualDTO>>> GetVentasMensuales(
-        string? codigoCliente, string? nombreCliente, int? anio, int? mes, string? producto, string? sku)
-    {
-        var query = _dbContext.Facturas.AsQueryable();
+        public ReporteController(ProyectContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
 
-        // Filtrar por parámetros si están presentes
-        // ...
+        [HttpGet("ventas-mensuales")]
+        public async Task<ActionResult<IEnumerable<ReporteVentaMensualDTO>>> GetVentasMensuales(
+            string? codigoCliente, string? nombreCliente, int? anio, int? mes, string? producto, string? sku)
+        {
+            // Comienza la consulta por clientes
+            var clientesQuery = _dbContext.Clientes.AsQueryable();
 
-        var reporte = await query
-            .Include(f => f.Cliente)
-            .Include(f => f.DetallesFactura)
-            .ThenInclude(d => d.Producto)
-            .Where(f => (!anio.HasValue || f.Fecha.Year == anio) && 
-                        (!mes.HasValue || f.Fecha.Month == mes) &&
-                        (codigoCliente == null || (f.Cliente != null && f.Cliente.Codigo == codigoCliente)) &&
-                        (nombreCliente == null || (f.Cliente != null && f.Cliente.Nombre == nombreCliente)) &&
-                        (producto == null || f.DetallesFactura.Any(d => d.Producto.Descripcion == producto)) &&
-                        (sku == null || f.DetallesFactura.Any(d => d.Producto.SKU == sku)))
-            .GroupBy(f => new 
+            // Filtra por código y nombre si están presentes
+            if (!string.IsNullOrWhiteSpace(codigoCliente))
             {
-                Codigo = f.Cliente != null ? f.Cliente.Codigo : null,
-                Nombre = f.Cliente != null ? f.Cliente.Nombre : null,
-                Año = f.Fecha.Year,
-                Mes = f.Fecha.Month
-            })
-            .Select(g => new ReporteVentaMensualDTO
+                clientesQuery = clientesQuery.Where(c => c.Codigo == codigoCliente);
+            }
+            if (!string.IsNullOrWhiteSpace(nombreCliente))
             {
-                CodigoCliente = g.Key != null ? g.Key.Codigo : string.Empty,
-                NombreCliente = g.Key != null ? g.Key.Nombre : string.Empty,
-                Anio = g.Key.Año,
-                Mes = g.Key.Mes,
-                TotalDolares = g.Sum(f => f.DetallesFactura.Sum(d => d.Cantidad * d.Producto.PrecioDolares)),
-                TotalCordobas = g.Sum(f => f.DetallesFactura.Sum(d => d.Cantidad * d.Producto.PrecioCordobas)),
-                Producto = string.Join(", ", g.SelectMany(f => f.DetallesFactura.Select(d => d.Producto.Descripcion)).Distinct()),
-                SKU = string.Join(", ", g.SelectMany(f => f.DetallesFactura.Select(d => d.Producto.SKU)).Distinct())
-            })
-            .ToListAsync();
+                clientesQuery = clientesQuery.Where(c => c.Nombre == nombreCliente);
+            }
 
-        return Ok(reporte);
+            // Incluye las facturas y detalles de factura y productos
+            var clientesConFacturas = await clientesQuery
+                .Select(c => new
+                {
+                    Cliente = c,
+                    Facturas = c.Facturas
+                        .Where(f => (!anio.HasValue || f.Fecha.Year == anio) &&
+                                    (!mes.HasValue || f.Fecha.Month == mes) &&
+                                    (producto == null || f.DetallesFactura.Any(d => d.Producto.Descripcion == producto)) &&
+                                    (sku == null || f.DetallesFactura.Any(d => d.Producto.SKU == sku)))
+                        .Select(f => new
+                        {
+                            f.Fecha,
+                            Detalles = f.DetallesFactura.Select(d => new
+                            {
+                                d.Cantidad,
+                                d.Producto.PrecioDolares,
+                                d.Producto.PrecioCordobas,
+                                d.Producto.Descripcion,
+                                d.Producto.SKU
+                            })
+                        })
+                })
+                .ToListAsync();
+
+            // Construye el reporte
+            var reporte = clientesConFacturas.Select(c => new ReporteVentaMensualDTO
+            {
+                CodigoCliente = c.Cliente.Codigo,
+                NombreCliente = c.Cliente.Nombre,
+                Anio = anio ?? 0,
+                Mes = mes ?? 0,
+                TotalDolares = c.Facturas.Sum(f => f.Detalles.Sum(d => d.Cantidad * d.PrecioDolares)),
+                TotalCordobas = c.Facturas.Sum(f => f.Detalles.Sum(d => d.Cantidad * d.PrecioCordobas)),
+                Producto = string.Join(", ", c.Facturas.SelectMany(f => f.Detalles.Select(d => d.Descripcion)).Distinct()),
+                SKU = string.Join(", ", c.Facturas.SelectMany(f => f.Detalles.Select(d => d.SKU)).Distinct())
+            }).ToList();
+
+            return Ok(reporte);
+        }
+
     }
-}
 
 }

@@ -13,4 +13,11 @@ namespace gbmtest.Models
         public DateTime Fecha { get; set; }
         public decimal Valor { get; set; }
     }
+
+    public class TasaDeCambioDto
+    {
+        public Guid Id { get; set; }
+        public DateTime Fecha { get; set; }
+        public decimal Valor { get; set; }
+    }
 }

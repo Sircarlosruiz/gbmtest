@@ -31,4 +31,12 @@ namespace gbmtest.Models
         [JsonIgnore]
         public ICollection<Factura> Facturas { get; set; }
     }
+
+    public class ClienteDto
+    {
+        public Guid Id { get; set; }
+        public string Nombre { get; set; }
+        public string Codigo { get; set; }
+        public string Direccion { get; set; }
+    }
 }

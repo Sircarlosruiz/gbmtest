@@ -20,26 +20,54 @@ namespace gbmtest.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetFacturas()
+        public async Task<ActionResult<IEnumerable<FacturaDto>>> GetFacturas()
         {
             var facturas = await _dbContext.Facturas.Include(factura => factura.Cliente).ToListAsync();
+            var facturasDto = facturas.Select(factura => new FacturaDto
+            {
+                Id = factura.Id,
+                ClienteId = factura.ClienteId,
+                Fecha = factura.Fecha,
+                Iva = factura.Iva
+            }).ToList();
             return Ok(facturas);
         }
 
+        public class FacturaCreationDto
+        {
+            public Guid Id { get; set; }
+            public Guid ClienteId { get; set; }
+            public DateTime Fecha { get; set; }
+            public decimal Iva { get; set; }
+        }
+
         [HttpPost]
-        public async Task<ActionResult> CreateFactura([FromBody] Factura factura)
+        public async Task<ActionResult<FacturaCreationDto>> CreateFactura([FromBody] Factura factura)
         {
             factura.Id = Guid.NewGuid();
             factura.Fecha = DateTime.Now;
             const decimal tasaIva = 0.15m;
-            factura.Iva = tasaIva;
             await _dbContext.Facturas.AddAsync(factura);
+            decimal totalPrecio = 0;
+            foreach(var detalle in factura.DetallesFactura)
+            {
+                totalPrecio += detalle.Cantidad * detalle.PrecioUnitario;
+            }
+
+            factura.Iva = totalPrecio * tasaIva;
             await _dbContext.SaveChangesAsync();
-            return Ok(factura);
+            var facturaDto = new FacturaCreationDto
+            {
+                Id = factura.Id,
+                ClienteId = factura.ClienteId,
+                Fecha = factura.Fecha,
+                Iva = factura.Iva
+            };
+            return Ok(facturaDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateFactura([FromServices] ProyectContext dbContext, [FromBody] Factura factura, Guid id)
+        public async Task<ActionResult<FacturaCreationDto>> UpdateFactura([FromServices] ProyectContext dbContext, [FromBody] Factura factura, Guid id)
         {
             var facturaToUpdate = await dbContext.Facturas.FindAsync(id);
             if (facturaToUpdate == null)
@@ -51,7 +79,14 @@ namespace gbmtest.Controllers
             facturaToUpdate.Fecha = factura.Fecha;
 
             await dbContext.SaveChangesAsync();
-            return Ok(facturaToUpdate);
+            var facturaDto = new FacturaCreationDto
+            {
+                Id = facturaToUpdate.Id,
+                ClienteId = facturaToUpdate.ClienteId,
+                Fecha = facturaToUpdate.Fecha,
+                Iva = facturaToUpdate.Iva
+            };
+            return Ok(facturaDto);
         }
 
         [HttpDelete("{id}")]

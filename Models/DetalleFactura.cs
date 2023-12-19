@@ -22,4 +22,13 @@ namespace gbmtest.Models
         public Factura Factura { get; set; }
         public Producto Producto { get; set; }
     }
+
+    public class DetalleFacturaDto
+    {
+        public Guid Id { get; set; }
+        public Guid FacturaId { get; set; }
+        public Guid ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+    }
 }

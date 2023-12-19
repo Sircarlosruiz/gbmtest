@@ -33,14 +33,6 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = string.Empty;
 });
 
-// app.MapGet("/", () => "Hello World!");
-
-app.MapGet("/dbconexion", ([FromServices] ProyectContext dbContext) =>
-{
-    dbContext.Database.EnsureCreated();
-    return Results.Ok("Base de datos creada correctamente" + dbContext.Database.IsInMemory());
-});
-
 app.UseRouting();
 
 app.MapControllers();

@@ -20,23 +20,51 @@ namespace gbmtest.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetDetalleFacturas()
+        public async Task<ActionResult<IEnumerable<DetalleFacturaDto>>> GetDetalleFacturas()
         {
-            var detalleFacturas = await _dbContext.DetallesFactura.Include(df => df.Factura).ToListAsync();
+            var detalleFacturas = await _dbContext.DetallesFactura.Include(df => df.Factura).Include(df => df.Producto).ToListAsync();
+            
+            var detalleFacturasDto = detalleFacturas.Select(detalleFactura => new DetalleFacturaDto
+            {
+                Id = detalleFactura.Id,
+                FacturaId = detalleFactura.FacturaId,
+                ProductoId = detalleFactura.ProductoId,
+                Cantidad = detalleFactura.Cantidad,
+                PrecioUnitario = detalleFactura.PrecioUnitario
+            }).ToList();
             return Ok(detalleFacturas);
         }
 
+        public class DetalleFacturaDto
+        {
+            public Guid Id { get; set; }
+            public Guid FacturaId { get; set; }
+            public Guid ProductoId { get; set; }
+            public int Cantidad { get; set; }
+            public decimal PrecioUnitario { get; set; }
+        }
+
         [HttpPost]
-        public async Task<ActionResult> CreateDetalleFactura([FromBody] gbmtest.Models.DetalleFactura detalleFactura)
+        public async Task<ActionResult<DetalleFacturaDto>> CreateDetalleFactura([FromBody] gbmtest.Models.DetalleFactura detalleFactura)
         {
             detalleFactura.Id = Guid.NewGuid();
             await _dbContext.DetallesFactura.AddAsync(detalleFactura);
             await _dbContext.SaveChangesAsync();
-            return Ok(detalleFactura);
+            var detalleFacturaDto = new DetalleFacturaDto
+            {
+                Id = detalleFactura.Id,
+                FacturaId = detalleFactura.FacturaId,
+                ProductoId = detalleFactura.ProductoId,
+                Cantidad = detalleFactura.Cantidad,
+                PrecioUnitario = detalleFactura.PrecioUnitario
+            };
+            return Ok(detalleFacturaDto);
         }
 
+
+
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateDetalleFactura([FromServices] ProyectContext dbContext, [FromBody] gbmtest.Models.DetalleFactura detalleFactura, Guid id)
+        public async Task<ActionResult<DetalleFacturaDto>> UpdateDetalleFactura([FromServices] ProyectContext dbContext, [FromBody] gbmtest.Models.DetalleFactura detalleFactura, Guid id)
         {
             var detalleFacturaToUpdate = await dbContext.DetallesFactura.FindAsync(id);
             if (detalleFacturaToUpdate == null)
@@ -50,7 +78,15 @@ namespace gbmtest.Controllers
             detalleFacturaToUpdate.PrecioUnitario = detalleFactura.PrecioUnitario;
 
             await dbContext.SaveChangesAsync();
-            return Ok(detalleFacturaToUpdate);
+            var detalleFacturaDto = new DetalleFacturaDto
+            {
+                Id = detalleFacturaToUpdate.Id,
+                FacturaId = detalleFacturaToUpdate.FacturaId,
+                ProductoId = detalleFacturaToUpdate.ProductoId,
+                Cantidad = detalleFacturaToUpdate.Cantidad,
+                PrecioUnitario = detalleFacturaToUpdate.PrecioUnitario
+            };
+            return Ok(detalleFacturaDto);
         }
 
         [HttpDelete("{id}")]

@@ -20,24 +20,43 @@ namespace gbmtest.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetTasasDeCambio()
+        public async Task<ActionResult<IEnumerable<TasaDeCambioDto>>> GetTasasDeCambio()
         {
             var tasasDeCambio = await _dbContext.TasasDeCambio.ToListAsync();
-            return Ok(tasasDeCambio);
+            var tasasDeCambioDto = tasasDeCambio.Select(tasaDeCambio => new TasaDeCambioDto
+            {
+                Id = tasaDeCambio.Id,
+                Valor = tasaDeCambio.Valor,
+                Fecha = tasaDeCambio.Fecha
+            }).ToList();
+            return Ok(tasasDeCambioDto);
+        }
+
+        public class TasaDeCambioCreationDto
+        {
+            public Guid Id { get; set; }
+            public decimal Valor { get; set; }
+            public DateTime Fecha { get; set; }
         }
 
         [HttpPost]
-        public async Task<ActionResult> CreateTasaDeCambio([FromBody] TasaDeCambio tasaDeCambio)
+        public async Task<ActionResult<TasaDeCambioCreationDto>> CreateTasaDeCambio([FromBody] TasaDeCambio tasaDeCambio)
         {
             tasaDeCambio.Id = Guid.NewGuid();
             tasaDeCambio.Fecha = DateTime.Now;
             await _dbContext.TasasDeCambio.AddAsync(tasaDeCambio);
             await _dbContext.SaveChangesAsync();
-            return Ok(tasaDeCambio);
+            var tasaDeCambioDto = new TasaDeCambioCreationDto
+            {
+                Id = tasaDeCambio.Id,
+                Valor = tasaDeCambio.Valor,
+                Fecha = tasaDeCambio.Fecha
+            };
+            return Ok(tasaDeCambioDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateTasaDeCambio([FromServices] ProyectContext dbContext, [FromBody] TasaDeCambio tasaDeCambio, Guid id)
+        public async Task<ActionResult<TasaDeCambioCreationDto>> UpdateTasaDeCambio([FromServices] ProyectContext dbContext, [FromBody] TasaDeCambio tasaDeCambio, Guid id)
         {
             var tasaDeCambioToUpdate = await dbContext.TasasDeCambio.FindAsync(id);
             if (tasaDeCambioToUpdate == null)
@@ -49,7 +68,13 @@ namespace gbmtest.Controllers
             tasaDeCambioToUpdate.Fecha = tasaDeCambio.Fecha;
 
             await dbContext.SaveChangesAsync();
-            return Ok(tasaDeCambioToUpdate);
+            var tasaDeCambioDto = new TasaDeCambioCreationDto
+            {
+                Id = tasaDeCambioToUpdate.Id,
+                Valor = tasaDeCambioToUpdate.Valor,
+                Fecha = tasaDeCambioToUpdate.Fecha
+            };
+            return Ok(tasaDeCambioDto);
         }
 
         [HttpDelete("{id}")]

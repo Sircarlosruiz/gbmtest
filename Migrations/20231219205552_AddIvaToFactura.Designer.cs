@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using gbmtest;
 
@@ -10,9 +11,11 @@ using gbmtest;
 namespace gbmtest.Migrations
 {
     [DbContext(typeof(ProyectContext))]
-    partial class ProyectContextModelSnapshot : ModelSnapshot
+    [Migration("20231219205552_AddIvaToFactura")]
+    partial class AddIvaToFactura
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

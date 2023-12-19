@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using gbmtest.Models;
+using gbmtest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,14 +21,22 @@ namespace gbmtest.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetProductos()
+        public async Task<ActionResult<IEnumerable<ProductoDto>>> GetProductos()
         {
             var productos = await _dbContext.Productos.Include(producto => producto.DetallesFacturas).ToListAsync();
+            var productosDto = productos.Select(producto => new ProductoDto
+            {
+                Id = producto.Id,
+                SKU = producto.SKU,
+                Descripcion = producto.Descripcion,
+                PrecioCordobas = producto.PrecioCordobas,
+                PrecioDolares = producto.PrecioDolares
+            }).ToList();
             return Ok(productos);
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult> GetProductoBySkuOrDescripcion(string? sku, string? descripcion)
+        public async Task<ActionResult<IEnumerable<ProductoDto>>> GetProductoBySkuOrDescripcion(string? sku, string? descripcion)
         {
             var query = _dbContext.Productos.AsQueryable();
 
@@ -41,31 +50,47 @@ namespace gbmtest.Controllers
                 query = query.Where(p => p.Descripcion.Contains(descripcion));
             }
 
-            // Incluir la tasa de cambio del día en la respuesta
             var tasaDeCambioDelDia = await _dbContext.TasasDeCambio.OrderByDescending(t => t.Fecha).FirstOrDefaultAsync();
             var productos = await query.ToListAsync();
-
-            // Añadir la tasa de cambio a cada producto si es necesario
-            var productosConTasa = productos.Select(p => new
+            var productosDto = productos.Select(producto => new ProductoDto
             {
-                Producto = p,
-                TasaDeCambio = tasaDeCambioDelDia
-            });
+                Id = producto.Id,
+                SKU = producto.SKU,
+                Descripcion = producto.Descripcion,
+                PrecioCordobas = producto.PrecioCordobas,
+                PrecioDolares = producto.PrecioDolares * tasaDeCambioDelDia.Valor
+            }).ToList();
+            return Ok(productosDto);
+        }
 
-            return Ok(productosConTasa);
+        public class ProductoCreationDto
+        {
+            public Guid Id { get; set; }
+            public string SKU { get; set; }
+            public string Descripcion { get; set; }
+            public decimal PrecioCordobas { get; set; }
+            public decimal PrecioDolares { get; set; }
         }
 
         [HttpPost]
-        public async Task<ActionResult> PostProducto([FromBody] Producto producto)
+        public async Task<ActionResult<ProductoCreationDto>> PostProducto([FromBody] Producto producto)
         {
             producto.Id = Guid.NewGuid();
             await _dbContext.Productos.AddAsync(producto);
             await _dbContext.SaveChangesAsync();
-            return Ok(producto);
+            var productoDto = new ProductoCreationDto
+            {
+                Id = producto.Id,
+                SKU = producto.SKU,
+                Descripcion = producto.Descripcion,
+                PrecioCordobas = producto.PrecioCordobas,
+                PrecioDolares = producto.PrecioDolares
+            };
+            return Ok(productoDto);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateProducto([FromServices] ProyectContext dbContext, [FromBody] Producto producto, Guid id)
+        public async Task<ActionResult<ProductoCreationDto>> UpdateProducto([FromServices] ProyectContext dbContext, [FromBody] Producto producto, Guid id)
         {
             var productoToUpdate = await dbContext.Productos.FindAsync(id);
             if (productoToUpdate == null)
@@ -79,7 +104,15 @@ namespace gbmtest.Controllers
             productoToUpdate.PrecioDolares = producto.PrecioDolares;
 
             await dbContext.SaveChangesAsync();
-            return Ok(productoToUpdate);
+            var productoDto = new ProductoCreationDto
+            {
+                Id = productoToUpdate.Id,
+                SKU = productoToUpdate.SKU,
+                Descripcion = productoToUpdate.Descripcion,
+                PrecioCordobas = productoToUpdate.PrecioCordobas,
+                PrecioDolares = productoToUpdate.PrecioDolares
+            };
+            return Ok(productoDto);
         }
 
         [HttpDelete("{id}")]
@@ -95,5 +128,6 @@ namespace gbmtest.Controllers
             await dbContext.SaveChangesAsync();
             return Ok();
         }
+
     }
 }
