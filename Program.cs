@@ -1,5 +1,6 @@
 using gbmtest;
 using gbmtest.Models;
+using gbmtest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -13,6 +14,7 @@ builder.Services.AddDbContext<ProyectContext>(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSingleton<ConversionMonedaService>();
 
 
 builder.Services.AddSwaggerGen(c =>

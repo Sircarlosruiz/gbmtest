@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using gbmtest.Models;
+using gbmtest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,25 +14,37 @@ namespace gbmtest.Controllers
     public class FacturaController : ControllerBase
     {
         private readonly ProyectContext _dbContext;
+        private readonly ConversionMonedaService _conversionService;
 
-        public FacturaController(ProyectContext dbContext)
+        public FacturaController(ProyectContext dbContext, ConversionMonedaService conversionService)
         {
             _dbContext = dbContext;
+            _conversionService = conversionService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<FacturaDto>>> GetFacturas()
+        public async Task<ActionResult<IEnumerable<FacturaCreationDto>>> GetFacturas()
         {
             var facturas = await _dbContext.Facturas.Include(factura => factura.Cliente).ToListAsync();
-            var facturasDto = facturas.Select(factura => new FacturaDto
+            var facturasDto = facturas.Select(factura => new FacturaCreationDto
             {
                 Id = factura.Id,
                 ClienteId = factura.ClienteId,
                 Fecha = factura.Fecha,
-                Iva = factura.Iva
+                Iva = factura.Iva,
+                Cliente = factura.Cliente != null ? new ClienteCreationDto
+                {
+                    Id = factura.Cliente.Id,
+                    Nombre = factura.Cliente.Nombre,
+                    Codigo = factura.Cliente.Codigo,
+                    Direccion = factura.Cliente.Direccion
+                } : null
             }).ToList();
-            return Ok(facturas);
+
+            return Ok(facturasDto);
         }
+
+
 
         public class FacturaCreationDto
         {
@@ -39,22 +52,36 @@ namespace gbmtest.Controllers
             public Guid ClienteId { get; set; }
             public DateTime Fecha { get; set; }
             public decimal Iva { get; set; }
+            public ClienteCreationDto Cliente { get; set; }
         }
+
+        public class ClienteCreationDto
+        {
+            public Guid Id { get; set; }
+            public string Nombre { get; set; }
+            public string Codigo { get; set; }
+            public string Direccion { get; set; }
+        }
+
 
         [HttpPost]
         public async Task<ActionResult<FacturaCreationDto>> CreateFactura([FromBody] Factura factura)
         {
             factura.Id = Guid.NewGuid();
             factura.Fecha = DateTime.Now;
-            const decimal tasaIva = 0.15m;
+            decimal totalIVA = 0;
             await _dbContext.Facturas.AddAsync(factura);
-            decimal totalPrecio = 0;
-            foreach(var detalle in factura.DetallesFactura)
+            foreach (var detalle in factura.DetallesFactura)
             {
-                totalPrecio += detalle.Cantidad * detalle.PrecioUnitario;
+                var producto = await _dbContext.Productos.FindAsync(detalle.ProductoId);
+                if (producto != null)
+                {
+                    var ivaDetalle = _conversionService.CalcularIVA(detalle.PrecioUnitario);
+                    totalIVA += ivaDetalle;
+                }
             }
-
-            factura.Iva = totalPrecio * tasaIva;
+            factura.Iva = totalIVA;
+            await _dbContext.Facturas.AddAsync(factura);
             await _dbContext.SaveChangesAsync();
             var facturaDto = new FacturaCreationDto
             {

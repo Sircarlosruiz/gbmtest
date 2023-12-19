@@ -14,10 +14,12 @@ namespace gbmtest.Controllers
     public class ProductoController : ControllerBase
     {
         private readonly ProyectContext _dbContext;
+        private readonly ConversionMonedaService _conversionService;
 
-        public ProductoController(ProyectContext dbContext)
+        public ProductoController(ProyectContext dbContext, ConversionMonedaService conversionService)
         {
             _dbContext = dbContext;
+            _conversionService = conversionService;
         }
 
         [HttpGet]
@@ -30,9 +32,9 @@ namespace gbmtest.Controllers
                 SKU = producto.SKU,
                 Descripcion = producto.Descripcion,
                 PrecioCordobas = producto.PrecioCordobas,
-                PrecioDolares = producto.PrecioDolares
+                PrecioDolares = _conversionService.ConvertirCordobasADolares(producto.PrecioCordobas)
             }).ToList();
-            return Ok(productos);
+            return Ok(productosDto);
         }
 
         [HttpGet("search")]
@@ -58,7 +60,7 @@ namespace gbmtest.Controllers
                 SKU = producto.SKU,
                 Descripcion = producto.Descripcion,
                 PrecioCordobas = producto.PrecioCordobas,
-                PrecioDolares = producto.PrecioDolares * tasaDeCambioDelDia.Valor
+                PrecioDolares = _conversionService.ConvertirCordobasADolares(producto.PrecioCordobas)
             }).ToList();
             return Ok(productosDto);
         }
@@ -84,7 +86,7 @@ namespace gbmtest.Controllers
                 SKU = producto.SKU,
                 Descripcion = producto.Descripcion,
                 PrecioCordobas = producto.PrecioCordobas,
-                PrecioDolares = producto.PrecioDolares
+                PrecioDolares = _conversionService.ConvertirCordobasADolares(producto.PrecioCordobas)
             };
             return Ok(productoDto);
         }
@@ -101,7 +103,6 @@ namespace gbmtest.Controllers
             productoToUpdate.SKU = producto.SKU;
             productoToUpdate.Descripcion = producto.Descripcion;
             productoToUpdate.PrecioCordobas = producto.PrecioCordobas;
-            productoToUpdate.PrecioDolares = producto.PrecioDolares;
 
             await dbContext.SaveChangesAsync();
             var productoDto = new ProductoCreationDto
@@ -110,7 +111,7 @@ namespace gbmtest.Controllers
                 SKU = productoToUpdate.SKU,
                 Descripcion = productoToUpdate.Descripcion,
                 PrecioCordobas = productoToUpdate.PrecioCordobas,
-                PrecioDolares = productoToUpdate.PrecioDolares
+                PrecioDolares = _conversionService.ConvertirCordobasADolares(productoToUpdate.PrecioCordobas)
             };
             return Ok(productoDto);
         }

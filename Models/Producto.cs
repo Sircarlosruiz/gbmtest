@@ -21,22 +21,12 @@ namespace gbmtest.Models
         [MaxLength(150)]
         public string Descripcion { get; set; }
         public decimal PrecioCordobas { get; set; }
-        public decimal PrecioDolares { get; set; }
         [Required]
         public string SKU { get; set; }
 
         [JsonIgnore]
         public ICollection<DetalleFactura> DetallesFacturas { get; set; }
 
-        public decimal ConvertirPrecioADolares(decimal tasaDeCambio)
-        {
-            return PrecioCordobas / tasaDeCambio;
-        }
-
-        public decimal ConvertirPrecioACordobas(decimal tasaDeCambio)
-        {
-            return PrecioDolares * tasaDeCambio;
-        }
     }
 
     public class ProductoDto

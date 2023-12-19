@@ -26,15 +26,15 @@ namespace gbmtest
         {
             List<Cliente> clientes = new List<Cliente>();
             clientes.Add(new Cliente() { Id = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20ca"), Nombre = "Cliente 1", Codigo = "C1", Direccion = "Managua" });
-            clientes.Add(new Cliente() { Id = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20cb"), Nombre = "Cliente 2", Codigo = "B1", Direccion = "Granaga" });
+            clientes.Add(new Cliente() { Id = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20cb"), Nombre = "Cliente 2", Codigo = "B1", Direccion = "Granada" });
 
             List<Factura> facturas = new List<Factura>();
             facturas.Add(new Factura() { Id = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20cc"), Fecha = DateTime.Now, ClienteId = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20ca") });
             facturas.Add(new Factura() { Id = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20cb"), Fecha = DateTime.Now, ClienteId = Guid.Parse("3d28b6ea-32e8-497b-9f52-07f211ac20cb") });
 
             List<Producto> productos = new List<Producto>();
-            productos.Add(new Producto() { Id = Guid.Parse("dc131c19-84af-4627-902a-08e3d5c98791"), Descripcion = "Producto 1", PrecioCordobas = 100, PrecioDolares = 10, SKU = "P1" });
-            productos.Add(new Producto() { Id = Guid.Parse("dc131c19-84af-4627-902a-08e3d5c98792"), Descripcion = "Producto 2", PrecioCordobas = 200, PrecioDolares = 20, SKU = "P2" });
+            productos.Add(new Producto() { Id = Guid.Parse("dc131c19-84af-4627-902a-08e3d5c98791"), Descripcion = "Producto 1", PrecioCordobas = 100, SKU = "P1" });
+            productos.Add(new Producto() { Id = Guid.Parse("dc131c19-84af-4627-902a-08e3d5c98792"), Descripcion = "Producto 2", PrecioCordobas = 200, SKU = "P2" });
 
             List<TasaDeCambio> tasasDeCambio = new List<TasaDeCambio>();
             tasasDeCambio.Add(new TasaDeCambio() { Id = Guid.Parse("f789837c-ddd3-4451-be64-57996acf89ce"), Fecha = DateTime.Now, Valor = 36 });
@@ -78,7 +78,6 @@ namespace gbmtest
                 producto.HasKey(p => p.Id);
                 producto.Property(p => p.Descripcion).HasMaxLength(150).IsRequired();
                 producto.Property(p => p.PrecioCordobas).IsRequired();
-                producto.Property(p => p.PrecioDolares).IsRequired();
                 producto.Property(p => p.SKU).HasMaxLength(50);
                 producto.HasData(productos);
             });

@@ -22,7 +22,7 @@ namespace gbmtest.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DetalleFacturaDto>>> GetDetalleFacturas()
         {
-            var detalleFacturas = await _dbContext.DetallesFactura.Include(df => df.Factura).Include(df => df.Producto).ToListAsync();
+            var detalleFacturas = await _dbContext.DetallesFactura.Include(df => df.Factura).ThenInclude(f => f.Cliente).Include(df => df.Producto).ToListAsync();
             
             var detalleFacturasDto = detalleFacturas.Select(detalleFactura => new DetalleFacturaDto
             {

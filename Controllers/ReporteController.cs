@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using gbmtest.Models;
+using gbmtest.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +14,12 @@ namespace gbmtest.Controllers
     public class ReporteController : ControllerBase
     {
         private readonly ProyectContext _dbContext;
+        private readonly ConversionMonedaService _conversionService;
 
-        public ReporteController(ProyectContext dbContext)
+        public ReporteController(ProyectContext dbContext, ConversionMonedaService conversionService)
         {
             _dbContext = dbContext;
+            _conversionService = conversionService;
         }
 
         [HttpGet("ventas-mensuales")]
@@ -52,14 +55,15 @@ namespace gbmtest.Controllers
                             Detalles = f.DetallesFactura.Select(d => new
                             {
                                 d.Cantidad,
-                                d.Producto.PrecioDolares,
-                                d.Producto.PrecioCordobas,
+                                PrecioCordobas = d.PrecioUnitario,
+                                PrecioDolares = _conversionService.ConvertirCordobasADolares(d.PrecioUnitario),
                                 d.Producto.Descripcion,
                                 d.Producto.SKU
                             })
                         })
                 })
                 .ToListAsync();
+
 
             // Construye el reporte
             var reporte = clientesConFacturas.Select(c => new ReporteVentaMensualDTO
@@ -73,6 +77,7 @@ namespace gbmtest.Controllers
                 Producto = string.Join(", ", c.Facturas.SelectMany(f => f.Detalles.Select(d => d.Descripcion)).Distinct()),
                 SKU = string.Join(", ", c.Facturas.SelectMany(f => f.Detalles.Select(d => d.SKU)).Distinct())
             }).ToList();
+
 
             return Ok(reporte);
         }
