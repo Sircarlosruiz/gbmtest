@@ -58,7 +58,8 @@ namespace gbmtest
                 factura.ToTable("Factura");
                 factura.HasKey(f => f.Id);
                 factura.Property(f => f.Fecha).IsRequired();
-                factura.HasOne(f => f.Cliente).WithMany(c => c.Facturas).HasForeignKey(f => f.ClienteId).OnDelete(DeleteBehavior.Cascade);
+                factura.HasMany(f => f.DetallesFactura).WithOne(d => d.Factura).HasForeignKey(d => d.FacturaId).OnDelete(DeleteBehavior.Cascade).IsRequired(false);
+                factura.HasOne(f => f.Cliente).WithMany(c => c.Facturas).HasForeignKey(f => f.ClienteId).OnDelete(DeleteBehavior.Cascade).IsRequired(false);
                 factura.HasData(facturas);
             });
 

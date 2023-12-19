@@ -10,14 +10,20 @@ namespace gbmtest.Models
 {
     public class Factura
     {
+        public Factura()
+        {
+            DetallesFactura = new HashSet<DetalleFactura>();
+            Cliente = null;
+        }
         // [Key]
         public Guid Id { get; set; }
-        // [ForeignKey("ClienteId")]
+        [ForeignKey("ClienteId")]
         public Guid ClienteId { get; set; }
-        // [Required]
+        [Required]
         public DateTime Fecha { get; set; }
 
-        public Cliente Cliente { get; set; }
+        [JsonIgnore]
+        public Cliente? Cliente { get; set; }
 
         [JsonIgnore]
         public ICollection<DetalleFactura> DetallesFactura{ get; set; }
